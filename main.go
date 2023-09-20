@@ -1,34 +1,29 @@
 package main
 
 import (
-	"context"
-	"log"
-
+	"github.com/ZFP-Gaming/minion/initializers"
+	"github.com/ZFP-Gaming/minion/routes"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var collection *mongo.Collection
-var ctx = context.TODO()
+func init() {
+	initializers.ConnectToDb()
+}
 
 func main() {
-	clientOptions := options.Client().ApplyURI("mongodb://mongodb:27017")
-	client, err := mongo.Connect(ctx, clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+	config.AllowHeaders = []string{"*"}
 
 	r := gin.Default()
+	r.Use(cors.New(config))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
+	r.POST("/search", routes.FindUserByName)
+	r.GET("/all", routes.AllUsers)
 	r.Run(":8080")
 }
